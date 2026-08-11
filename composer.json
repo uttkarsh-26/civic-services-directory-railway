@@ -1,13 +1,13 @@
 {
-    "name": "uttkarsh-26/civic-services-directory",
+    "name": "uttkarsh-26/civic-services-directory-railway",
     "description": "Production-oriented Drupal 11 deployment template for Railway",
     "type": "project",
     "license": "MIT",
-    "homepage": "https://github.com/uttkarsh-26/civic-services-directory",
+    "homepage": "https://github.com/uttkarsh-26/civic-services-directory-railway",
     "support": {
-        "docs": "https://github.com/uttkarsh-26/civic-services-directory#readme",
-        "issues": "https://github.com/uttkarsh-26/civic-services-directory/issues",
-        "source": "https://github.com/uttkarsh-26/civic-services-directory"
+        "docs": "https://github.com/uttkarsh-26/civic-services-directory-railway#readme",
+        "issues": "https://github.com/uttkarsh-26/civic-services-directory-railway/issues",
+        "source": "https://github.com/uttkarsh-26/civic-services-directory-railway"
     },
     "repositories": [
         {

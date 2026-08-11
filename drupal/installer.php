@@ -16,7 +16,7 @@
 require __DIR__ . '/env.inc.php';
 
 // Arbitrary advisory lock key, unique to this template's install path.
-const DRUPAL_RAILWAY_LOCK_KEY = 72837462;
+const CIVIC_SERVICES_LOCK_KEY = 72837462;
 
 function drupal_railway_installer_fail(string $message): never {
   fwrite(STDERR, "[civic-services-directory] " . $message . "\n");
@@ -46,7 +46,7 @@ catch (Throwable $e) {
 // Hold the advisory lock for the rest of this process. A concurrent replica
 // blocks here until we finish, then re-checks and skips. The lock is released
 // automatically when the connection closes (including on failure).
-$pdo->exec('SELECT pg_advisory_lock(' . DRUPAL_RAILWAY_LOCK_KEY . ')');
+$pdo->exec('SELECT pg_advisory_lock(' . CIVIC_SERVICES_LOCK_KEY . ')');
 
 try {
   if (drupal_railway_is_installed($pdo)) {

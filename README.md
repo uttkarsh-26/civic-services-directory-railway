@@ -1,7 +1,7 @@
-# Drupal 11 on Railway
+# Civic Services Directory on Railway
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/civic-services-directory-template)
-[![CI](https://github.com/uttkarsh-26/civic-services-directory/actions/workflows/ci.yml/badge.svg)](https://github.com/uttkarsh-26/civic-services-directory/actions/workflows/ci.yml)
+[![CI](https://github.com/uttkarsh-26/civic-services-directory-railway/actions/workflows/ci.yml/badge.svg)](https://github.com/uttkarsh-26/civic-services-directory-railway/actions/workflows/ci.yml)
 
 A production-oriented [Drupal](https://www.drupal.org/) 11 template for
 [Railway](https://railway.com), built on a digest-pinned official Drupal 11.4.4

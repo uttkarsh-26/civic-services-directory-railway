@@ -1,4 +1,4 @@
-# Deploy and Host Drupal 11 on Railway
+# Deploy and Host Civic Services Directory on Railway
 
 Deploy a production-ready Drupal 11 site backed by PostgreSQL in one click. This template pins a known-good dependency graph (Drupal core, PHP 8.5, Apache) and wires persistent storage, a readiness health check, and automatic first-boot installation — no local tooling required.
 
@@ -6,7 +6,7 @@ Deploy a production-ready Drupal 11 site backed by PostgreSQL in one click. This
 
 Everything runs on Railway's managed platform:
 
-- **Web service** — Apache + PHP 8.5 (Drupal 11.4.x), built from the public `uttkarsh-26/civic-services-directory` repo. Apache adapts to Railway's dynamic `PORT`, and a `/health.php` endpoint drives the platform health check.
+- **Web service** — Apache + PHP 8.5 (Drupal 11.4.x), built from the public `uttkarsh-26/civic-services-directory-railway` repo. Apache adapts to Railway's dynamic `PORT`, and a `/health.php` endpoint drives the platform health check.
 - **PostgreSQL 18** — managed database service with SSL, auto-provisioned. Drupal is wired to it through `${{Postgres.DATABASE_URL}}`.
 - **Persistent volume** — a 500 MB volume mounts at `/data`: uploaded files, the hash salt, and configuration exports survive redeploys. No volume, no persistence — files reset on every deploy.
 - **Automatic install** — on first boot the entrypoint runs `drush site:install` (idempotent, guarded by a PostgreSQL advisory lock) with the variables you provide, then hands off to Apache.

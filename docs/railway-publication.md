@@ -6,7 +6,7 @@ This file captures the exact values to enter in the template composer.
 
 ## Template metadata
 
-- **Name:** Drupal 11 on Railway (Production)
+- **Name:** Civic Services Directory on Railway (Production)
 - **Short description (≤140 chars):**
   `Production-ready Drupal 11 + PostgreSQL. Automatic idempotent install, persistent /data volume, readiness health checks, generated secrets, Drush, cron.`
 - **Long description:** point to the GitHub README (feature bullets + first-boot flow).
@@ -15,7 +15,7 @@ This file captures the exact values to enter in the template composer.
 
 ### 1. Web (from this GitHub repo, `main` branch)
 
-- **Source:** `https://github.com/uttkarsh-26/civic-services-directory`
+- **Source:** `https://github.com/uttkarsh-26/civic-services-directory-railway`
 - **Builder:** Dockerfile (Railway auto-detects `Dockerfile` + `railway.toml`)
 - **Root directory:** `/` (leave empty)
 - **Healthcheck path:** `/health.php` (already in `railway.toml`; confirm it shows in Settings → Healthcheck Path)
