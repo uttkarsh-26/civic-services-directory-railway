@@ -3,17 +3,82 @@
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/civic-services-directory-template)
 [![CI](https://github.com/uttkarsh-26/civic-services-directory-railway/actions/workflows/ci.yml/badge.svg)](https://github.com/uttkarsh-26/civic-services-directory-railway/actions/workflows/ci.yml)
 
-A production-oriented [Drupal](https://www.drupal.org/) 11 template for
-[Railway](https://railway.com), built on a digest-pinned official Drupal 11.4.4
-PHP 8.5 Apache image
+**Civic Services Directory** is a ready-to-publish, independent civic-tech
+directory built on [Drupal](https://www.drupal.org/) 11 for
+[Railway](https://railway.com). It ships fully populated: on first boot the
+container installs Drupal **and** creates the directory product — the
+"Service" content type, the "Service Categories" taxonomy, six clearly-labeled
+fictional demo services, a category-grouped front page, and a footer
+disclaimer — with zero manual steps.
+
+It is built on a digest-pinned official Drupal 11.4.4 / PHP 8.5 Apache image
 with PostgreSQL. First boot is fully automatic and idempotent: the container
 waits for the database, installs Drupal from environment variables (safely
-serialized across concurrent replicas with a Postgres advisory lock), and
-starts Apache with a healthcheck Railway can rely on.
+serialized across concurrent replicas with a Postgres advisory lock), applies
+the content bootstrap, and starts Apache with a healthcheck Railway can rely
+on. Re-running the bootstrap never duplicates content.
+
+**Independent-branding promise:** this template produces an *independent*
+directory that links out to official government portals — it never imitates a
+government website (no seals, no .gov styling, no domain mimicry), and all
+demo content is fictional and labeled as such. See
+[Independent-branding rules](#independent-branding-rules) below.
 
 **Differentiator: reliability.** Deployment either completes or fails fast
 with an actionable log line — no half-installed sites, no "install via the web
 UI" steps, no hardcoded credentials.
+
+## What ships on first boot
+
+After `drush site:install` finishes, `drupal/bootstrap.php` (via
+`drupal/bootstrap-content.php`, run under `drush php:script`) creates, only
+when missing:
+
+| Piece | Details |
+|---|---|
+| **Content type "Service"** | Title, Category (term reference), Agency/Department (text), Summary (plain text), Full description (formatted text), Eligibility notes (text), Required documents (text long), Official source URL (external link, validated), Last verified date (date) |
+| **Taxonomy "Service Categories"** | Water & Utilities, Health & Family Welfare, Education & Scholarships, Transport & Licenses, Housing & Property, Pensions & Social Security |
+| **Demo content** | 6 fictional service entries, each labeled `[Demo entry — fictional, for template preview]`, each linking to a real official portal (e.g. `https://up.gov.in/`) |
+| **Front page** | The `services_directory` view at `/services`, listing services grouped by category; the site front page is pointed at it |
+| **Disclaimer block** | Footer block with the exact text: *"Independent information service — not a government website. Always confirm on official government portals."* |
+
+The bootstrap is idempotent: every entity is created only when it does not
+already exist, so redeploys and restarts are no-ops. It also fails closed —
+if the database is unreachable or Drupal is not installed yet it logs one line
+and exits 0, so Apache always starts and the health check keeps reporting.
+
+## Adding a service
+
+1. Log in at `/user/login` (`admin` / your `DRUPAL_ACCOUNT_PASS`).
+2. **Content → Add content → Service**.
+3. Fill in the fields. `Category`, `Summary` and `Official source URL` are
+   required. The URL field accepts external links only (they are validated on
+   save) — point it at the real official portal for the service.
+4. Save and publish. The new entry appears on the front page under its
+   category automatically.
+
+To add a category: **Structure → Taxonomy → Service Categories → Add term**.
+To restyle the listing: **Structure → Views → Services Directory**.
+
+## Independent-branding rules
+
+This template builds an **independent** civic-tech directory, not a
+government website. When you customize it, keep these rules:
+
+- **No government impersonation.** No official seals, emblems, or logos; no
+  styling that mimics a government portal (flag colors, "Government of X"
+  mastheads, official-looking forms that collect personal data); no domain
+  that contains "gov".
+- **Link out, don't imitate.** Every service entry carries an *Official source
+  URL* pointing at the real government portal (e.g. `https://up.gov.in/`) so
+  visitors confirm details there. The directory itself stays clearly
+  independent.
+- **Keep the disclaimer.** The footer block
+  *"Independent information service — not a government website. Always confirm
+  on official government portals."* must stay visible.
+- **Label demo content.** Anything fictional must be marked
+  `[Demo entry — fictional, for template preview]` (or similar) and the
+  example titles carry the "(fictional)" suffix.
 
 ## How first boot works
 
@@ -24,7 +89,10 @@ UI" steps, no hardcoded credentials.
    whether Drupal's schema exists, and runs `drush site:install` only if
    needed. Concurrent replicas block on the lock, then see the completed
    install and skip — exactly one install always wins.
-4. Files are handed to `www-data`, Apache is pointed at Railway's `PORT`, and
+4. The content bootstrap (`bootstrap.php`) ships the directory product —
+   content type, taxonomy, demo services, front-page view, disclaimer block.
+   It is idempotent and fails closed (see "What ships on first boot").
+5. Files are handed to `www-data`, Apache is pointed at Railway's `PORT`, and
    the server starts.
 
 ## Repository layout
@@ -37,6 +105,8 @@ UI" steps, no hardcoded credentials.
 | `drupal/env.inc.php` | Shared env parsing (`DATABASE_URL` / `PG*`), used by everything |
 | `drupal/settings.php` | Drupal settings driven by environment variables |
 | `drupal/installer.php` | Idempotent, advisory-lock-serialized installer |
+| `drupal/bootstrap.php` | Fail-closed first-boot content bootstrap runner (guard + drush dispatcher) |
+| `drupal/bootstrap-content.php` | Idempotent Drupal-API content bootstrap (content type, taxonomy, demo services, view, disclaimer block) |
 | `drupal/check-db.php` | DB readiness probe for the wait loop |
 | `drupal/health.php` | `/health.php` — DB + Drupal-bootstrap readiness endpoint (no secrets) |
 | `drupal/php.ini`, `drupal/apache-https.conf` | Production PHP + https-behind-proxy config |
@@ -55,8 +125,10 @@ cp .env.example .env        # then set DRUPAL_ACCOUNT_PASS to something strong
 docker compose up -d --build
 ```
 
-Open http://localhost:8080 — Drupal is installed automatically on first boot.
-Log in at `/user/login` with `admin` and your `DRUPAL_ACCOUNT_PASS`.
+Open http://localhost:8080 — Drupal is installed automatically on first boot,
+and the Civic Services Directory product (content type, taxonomy, demo
+services, front page, disclaimer block) is created right after. Log in at
+`/user/login` with `admin` and your `DRUPAL_ACCOUNT_PASS`.
 
 Run the full smoke test (build, concurrent first-boot, HTTP checks, secret
 leak check, persistence across container recreation):
@@ -96,9 +168,10 @@ contributed cron jobs that read uploads also need access to the files volume.
    (`${{secret(48)}}` in the template editor, or generate one locally with
    `openssl rand -hex 24`). Add the other variables you want (table below).
 6. Deploy. Watch the logs for
-   `[civic-services-directory] Drupal installed successfully`, then open the
-   `*.up.railway.app` domain. Your admin login is
-   `DRUPAL_ACCOUNT_NAME` / `DRUPAL_ACCOUNT_PASS`.
+   `[civic-services-directory] Drupal installed successfully` followed by
+   `content bootstrap complete`, then open the `*.up.railway.app` domain — the
+   directory, demo services and disclaimer are already there. Your admin login
+   is `DRUPAL_ACCOUNT_NAME` / `DRUPAL_ACCOUNT_PASS`.
 
 > Variables and volumes are managed in the dashboard (config-as-code covers
 > build/deploy settings only).

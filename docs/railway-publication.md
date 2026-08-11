@@ -6,10 +6,11 @@ This file captures the exact values to enter in the template composer.
 
 ## Template metadata
 
-- **Name:** Civic Services Directory on Railway (Production)
-- **Short description (≤140 chars):**
-  `Production-ready Drupal 11 + PostgreSQL. Automatic idempotent install, persistent /data volume, readiness health checks, generated secrets, Drush, cron.`
-- **Long description:** point to the GitHub README (feature bullets + first-boot flow).
+- **Name:** Civic Services Directory on Railway
+- **Short description (≤75 chars):**
+  `Drupal 11 civic services directory on Railway with demo content.`
+- **Long description:** point to the GitHub README (feature bullets + first-boot
+  flow).
 
 ## Services
 
@@ -49,15 +50,22 @@ This file captures the exact values to enter in the template composer.
 2. Entrypoint creates `/data/files`, `/data/config/sync`, `/data/state`.
 3. Idempotent installer takes a Postgres advisory lock, checks the schema, and
    runs `drush site:install` exactly once (concurrent replicas are safe).
-4. `health.php` returns 503 until Drupal bootstraps against the DB, then 200 —
+4. The content bootstrap ships the product: "Service" content type + fields,
+   "Service Categories" taxonomy, 6 labeled fictional demo services, the
+   `services_directory` view at `/services` (set as front page), and the
+   independent-service disclaimer footer block. It is idempotent — redeploys
+   create nothing twice — and fails closed when the DB is not ready.
+5. `health.php` returns 503 until Drupal bootstraps against the DB, then 200 —
    Railway routes traffic only after readiness.
-5. Admin login: **/user/login**, username `admin`, password = the generated
+6. Admin login: **/user/login**, username `admin`, password = the generated
    `DRUPAL_ACCOUNT_PASS` (shown in the deploy's Variables tab).
 
 ## Post-deploy checklist (for users and for template QA)
 
 - [ ] `/health.php` returns 200 with `drupal_installed:true`
-- [ ] Homepage 200, site name renders
+- [ ] Homepage 200; shows the directory listing grouped by category
+- [ ] Homepage footer shows the exact disclaimer: *"Independent information service — not a government website. Always confirm on official government portals."*
+- [ ] At least 3 demo services listed, each with `[Demo entry — fictional, for template preview]` and an Official source URL link to a real portal
 - [ ] `/user/login` 200; log in with the generated password
 - [ ] `/admin/reports/status` shows no critical errors
 - [ ] Upload a file → `sites/default/files` persists after redeploy (volume)

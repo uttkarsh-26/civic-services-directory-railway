@@ -1,6 +1,12 @@
 # Deploy and Host Civic Services Directory on Railway
 
-Deploy a production-ready Drupal 11 site backed by PostgreSQL in one click. This template pins a known-good dependency graph (Drupal core, PHP 8.5, Apache) and wires persistent storage, a readiness health check, and automatic first-boot installation — no local tooling required.
+Deploy a ready-to-publish, independent civic-services directory built on
+Drupal 11 + PostgreSQL in one click. The site installs itself on first boot
+**and ships fully populated**: a "Service" content type, a "Service
+Categories" taxonomy, six clearly-labeled fictional demo services, a
+category-grouped front page, and the independent-service disclaimer — no
+manual steps. This template pins a known-good dependency graph (Drupal core,
+PHP 8.5, Apache) and wires persistent storage and a readiness health check.
 
 ## About Hosting
 
@@ -9,7 +15,21 @@ Everything runs on Railway's managed platform:
 - **Web service** — Apache + PHP 8.5 (Drupal 11.4.x), built from the public `uttkarsh-26/civic-services-directory-railway` repo. Apache adapts to Railway's dynamic `PORT`, and a `/health.php` endpoint drives the platform health check.
 - **PostgreSQL 18** — managed database service with SSL, auto-provisioned. Drupal is wired to it through `${{Postgres.DATABASE_URL}}`.
 - **Persistent volume** — a 500 MB volume mounts at `/data`: uploaded files, the hash salt, and configuration exports survive redeploys. No volume, no persistence — files reset on every deploy.
-- **Automatic install** — on first boot the entrypoint runs `drush site:install` (idempotent, guarded by a PostgreSQL advisory lock) with the variables you provide, then hands off to Apache.
+- **Automatic install** — on first boot the entrypoint runs `drush site:install` (idempotent, guarded by a PostgreSQL advisory lock), then the content bootstrap creates the directory product (content type, taxonomy, demo services, front-page view, disclaimer block). Both are idempotent — redeploys create nothing twice.
+
+## What You Get
+
+- **A working directory out of the box** — the homepage lists services grouped
+  by category, every entry carries an "Official source URL" link to the real
+  government portal, and a footer states the independence promise: *"Independent
+  information service — not a government website. Always confirm on official
+  government portals."*
+- **A clear content model** — add services from the UI (Content → Add content →
+  Service): category, agency, summary, full description, eligibility, required
+  documents, official source URL, last-verified date.
+- **Independent branding** — the site is an independent civic-tech directory:
+  no government seals, no .gov styling, no domain mimicry. All demo content is
+  fictional and labeled `[Demo entry — fictional, for template preview]`.
 
 ## Why Deploy
 
@@ -20,8 +40,8 @@ Everything runs on Railway's managed platform:
 
 ## Common Use Cases
 
-- Launch a new Drupal site (blog, corporate site, intranet, community portal) without managing servers.
-- Preview a Drupal 11 codebase or contribute upstream: the repo's `test.sh` gives you a full local smoke test (install, health, drush, cron, persistence) in minutes.
+- Launch an independent civic services directory for a city, district, or community — pre-populated and ready to edit.
+- Publish a government-services guide that links out to official portals without imitating them.
 - Use as a starting point for custom Drupal work — `composer require` your modules in CI, keep the same storage and health-check guarantees.
 
 ## Dependencies for

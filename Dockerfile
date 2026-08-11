@@ -30,7 +30,9 @@ COPY drupal/apache-https.conf /etc/apache2/conf-available/civic-services-directo
 RUN a2enconf civic-services-directory-https
 
 # Runtime helpers live OUTSIDE the web root so they are never served.
-COPY drupal/env.inc.php drupal/check-db.php drupal/installer.php preflight.sh /opt/civic-services-directory/
+# bootstrap.php + bootstrap-content.php ship the Civic Services Directory
+# product (content type, taxonomy, demo services, view, disclaimer block).
+COPY drupal/env.inc.php drupal/check-db.php drupal/installer.php drupal/bootstrap.php drupal/bootstrap-content.php preflight.sh /opt/civic-services-directory/
 RUN chmod +x /opt/civic-services-directory/preflight.sh
 
 # Drupal overlay: env-driven settings + lightweight health endpoint.

@@ -11,6 +11,10 @@
 #      successful Drupal bootstrap; hostile Host headers are rejected.
 #   5. Files and the generated hash salt survive a web container recreate and
 #      Drupal is NOT re-installed.
+#   6. The Civic Services Directory product ships on first boot: the homepage
+#      shows the independent-service disclaimer, lists the demo services, and
+#      the first-boot content bootstrap is idempotent (re-runs duplicate
+#      nothing).
 #
 # Requirements: docker with compose v2, curl, openssl.
 #
@@ -232,6 +236,70 @@ code="$(http_code /)"
 [ "$code" = "200" ] || fail "homepage returned HTTP $code (expected 200)"
 curl -fsS --max-time 10 "$WEB_URL/" | grep -q "Civic Services Directory (local)" || fail "homepage does not contain the site name"
 ok "homepage HTTP 200 with site name"
+
+# ---- phase 3b: civic services directory product -----------------------------------
+log "phase 3b/4: verifying the civic services directory product"
+
+homepage="$(curl -fsS --max-time 10 "$WEB_URL/")"
+printf '%s' "$homepage" | grep -Fq "Independent information service — not a government website. Always confirm on official government portals." \
+  || fail "homepage does not contain the exact independent-service disclaimer"
+printf '%s' "$homepage" | grep -Fq "not a government website" \
+  || fail "homepage does not contain the disclaimer phrase 'not a government website'"
+ok "homepage carries the independent-service disclaimer (exact text)"
+
+for title in \
+  "Water connection application (fictional)" \
+  "Senior citizen pension enrolment (fictional)" \
+  "Driving licence renewal appointment (fictional)"; do
+  printf '%s' "$homepage" | grep -Fq "$title" || fail "homepage does not list demo service: $title"
+done
+printf '%s' "$homepage" | grep -Fq "[Demo entry — fictional, for template preview]" \
+  || fail "homepage does not show the fictional-demo label"
+ok "homepage lists demo services (>= 3) with the fictional label"
+
+first_service_nid="$(docker compose exec -T db psql -U drupal -d drupal -tAc "SELECT nid FROM node WHERE type='service' ORDER BY nid LIMIT 1" 2>/dev/null | tr -d '[:space:]' || true)"
+[ -n "$first_service_nid" ] || fail "could not find any service node"
+node_page="$(curl -fsS --max-time 10 "$WEB_URL/node/$first_service_nid")"
+printf '%s' "$node_page" | grep -Fq "[Demo entry — fictional, for template preview]" \
+  || fail "service node page does not show the fictional-demo label"
+printf '%s' "$node_page" | grep -Fq "up.gov.in" \
+  || fail "service node page does not render the official source URL link"
+ok "service node page renders the demo label and the official source link"
+
+content_model="$(docker compose exec -T web drush php:eval '
+$ok = TRUE;
+if (!\Drupal\node\Entity\NodeType::load("service")) { print "missing node type: service\n"; $ok = FALSE; }
+if (!\Drupal\taxonomy\Entity\Vocabulary::load("service_categories")) { print "missing vocabulary: service_categories\n"; $ok = FALSE; }
+if (!\Drupal\views\Entity\View::load("services_directory")) { print "missing view: services_directory\n"; $ok = FALSE; }
+if (!\Drupal\block\Entity\Block::load("civicdisclaimer")) { print "missing block: civicdisclaimer\n"; $ok = FALSE; }
+if (!$ok) { exit(1); }
+print "content model OK\n";
+' 2>/dev/null || true)"
+printf '%s' "$content_model" | grep -q "content model OK" \
+  || fail "civic services content model is incomplete: $(printf '%s' "$content_model" | tr '\n' ' ')"
+ok "content model present (Service type, vocabulary, view, disclaimer block)"
+
+svc_count() {
+  docker compose exec -T db psql -U drupal -d drupal -tAc "SELECT count(*) FROM node WHERE type='service'" 2>/dev/null | tr -d '[:space:]'
+}
+term_count() {
+  docker compose exec -T db psql -U drupal -d drupal -tAc "SELECT count(*) FROM taxonomy_term_data WHERE vid='service_categories'" 2>/dev/null | tr -d '[:space:]'
+}
+services_before="$(svc_count)"
+terms_before="$(term_count)"
+[ -n "$services_before" ] && [ "$services_before" -ge 5 ] \
+  || fail "expected at least 5 demo services, found '${services_before:-}'"
+docker compose exec -T web php /opt/civic-services-directory/bootstrap.php >"$TMPDIR_TEST/bootstrap-rerun-1.log" 2>&1 \
+  || { cat "$TMPDIR_TEST/bootstrap-rerun-1.log"; fail "first-boot content bootstrap re-run #1 failed"; }
+docker compose exec -T web php /opt/civic-services-directory/bootstrap.php >"$TMPDIR_TEST/bootstrap-rerun-2.log" 2>&1 \
+  || { cat "$TMPDIR_TEST/bootstrap-rerun-2.log"; fail "first-boot content bootstrap re-run #2 failed"; }
+services_after="$(svc_count)"
+terms_after="$(term_count)"
+[ "$services_after" = "$services_before" ] \
+  || fail "demo services duplicated by bootstrap re-run ($services_before -> $services_after)"
+[ "$terms_after" = "$terms_before" ] \
+  || fail "taxonomy terms duplicated by bootstrap re-run ($terms_before -> $terms_after)"
+ok "first-boot content bootstrap is idempotent (services=$services_before, terms=$terms_before unchanged after 2 re-runs)"
 
 code="$(http_code /user/login)"
 [ "$code" = "200" ] || fail "/user/login returned HTTP $code (expected 200)"

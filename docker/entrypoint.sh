@@ -50,6 +50,23 @@ else
   php "$RAILWAY_DIR/installer.php"
 fi
 
+# --- 3b. first-boot content bootstrap ------------------------------------------------
+# Ships the Civic Services Directory product on every boot after the install:
+# Service content type, Service Categories taxonomy, fictional demo services,
+# the front-page view and the independent-service disclaimer block. The
+# bootstrap is idempotent (re-runs create nothing) and fails closed when the
+# database is unreachable or Drupal is not installed yet. A real failure is
+# logged but does NOT stop Apache: the health check must still be able to
+# report status.
+if [ "${DRUPAL_SKIP_INSTALL:-0}" = "1" ]; then
+  log "DRUPAL_SKIP_INSTALL set; skipping content bootstrap"
+else
+  log "applying civic services directory content bootstrap"
+  if ! php "$RAILWAY_DIR/bootstrap.php"; then
+    log "content bootstrap reported an error (see above); continuing so the health check can report status"
+  fi
+fi
+
 # --- 4. ownership ----------------------------------------------------------------
 # The installer runs as root; Apache runs as www-data. Reapplying ownership on
 # every boot is cheap for typical sites and heals root-owned files created by
