@@ -1,6 +1,6 @@
 # Civic Services Directory on Railway
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/civic-services-directory-template)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/civic-services-template)
 [![CI](https://github.com/uttkarsh-26/civic-services-directory-railway/actions/workflows/ci.yml/badge.svg)](https://github.com/uttkarsh-26/civic-services-directory-railway/actions/workflows/ci.yml)
 
 **Civic Services Directory** is a ready-to-publish, independent civic-tech
